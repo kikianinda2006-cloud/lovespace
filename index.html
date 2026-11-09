@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LoveSpace Gen Z Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #07070e;
+      color: #f3f4f6;
+    }
+    .font-cyber { font-family: 'Space Grotesk', sans-serif; }
+    .glass-card {
+      background: rgba(22, 22, 35, 0.65);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .text-gradient {
+      background: linear-gradient(135deg, #f472b6 0%, #a855f7 50%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .vinyl-spin { animation: spin 8s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .equalizer-bar { animation: bounce 0.8s ease-in-out infinite alternate; }
+    @keyframes bounce { 0% { height: 4px; } 100% { height: 20px; } }
+    .paused { animation-play-state: paused !important; }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col justify-between selection:bg-pink-500 selection:text-white">
+
+  <!-- Floating Hearts Container -->
+  <div id="heartContainer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+  <div class="max-w-6xl mx-auto w-full space-y-6">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="glass-card rounded-3xl p-5 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+          <i class="fa-solid fa-bolt text-black text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold font-cyber tracking-tight flex items-center gap-2">
+            LoveSpace <span class="text-xs px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 font-sans">v2.6 Audio Fix</span>
+          </h1>
+          <p class="text-xs text-gray-400">Our Private Cyber World ✨</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <span id="syncBadge" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Local / Demo 🔒
+        </span>
+        <button onclick="copyShareLink()" class="px-3 py-1.5 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 text-xs font-medium border border-pink-500/20 transition flex items-center gap-1">
+          <i class="fa-solid fa-link"></i> Salin Link
+        </button>
+      </div>
+    </header>
+
+    <!-- BENTO GRID CONTAINER -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+      <!-- CARD 1: LOVE STREAK COUNTER (5 cols) -->
+      <div class="md:col-span-5 glass-card rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center gap-3">
+            <div class="flex -space-x-2">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 to-blue-500 p-0.5 shadow-md">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=anin" class="w-full h-full rounded-[14px] bg-slate-900" alt="Me">
+              </div>
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-400 to-rose-500 p-0.5 shadow-md">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=azzuri" class="w-full h-full rounded-[14px] bg-slate-900" alt="Bae">
+              </div>
+            </div>
+            <div>
+              <h3 id="coupleNames" class="font-bold text-lg text-white">anin & azzuri</h3>
+              <p id="sinceDateText" class="text-xs text-gray-400">Official Couple Since 07 Sep 2026</p>
+            </div>
+          </div>
+          <button onclick="editNames()" class="text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 transition">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+        </div>
+
+        <div class="my-4">
+          <p class="text-xs uppercase tracking-wider text-pink-400 font-semibold mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-bolt"></i> Love Streak Days
+          </p>
+          <div class="grid grid-cols-4 gap-2 text-center">
+            <div class="bg-black/30 rounded-2xl p-3 border border-white/5">
+              <span id="days" class="block text-2xl md:text-3xl font-extrabold text-white font-cyber">0</span>
+              <span class="text-[10px] text-gray-400 uppercase">Days</span>
+            </div>
+            <div class="bg-black/30 rounded-2xl p-3 border border-white/5">
+              <span id="hours" class="block text-2xl md:text-3xl font-extrabold text-white font-cyber">0</span>
+              <span class="text-[10px] text-gray-400 uppercase">Hrs</span>
+            </div>
+            <div class="bg-black/30 rounded-2xl p-3 border border-white/5">
+              <span id="mins" class="block text-2xl md:text-3xl font-extrabold text-white font-cyber">0</span>
+              <span class="text-[10px] text-gray-400 uppercase">Mins</span>
+            </div>
+            <div class="bg-black/30 rounded-2xl p-3 border border-white/5">
+              <span id="secs" class="block text-2xl md:text-3xl font-extrabold text-cyan-400 font-cyber">0</span>
+              <span class="text-[10px] text-gray-400 uppercase">Secs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: OUR ANTHEM - AUDIO PLAYER (4 cols) -->
+      <div class="md:col-span-4 glass-card rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+        <!-- Audio Element (Menggunakan link audio aman & stabil) -->
+        <audio id="bgAudio" preload="auto" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"></audio>
+
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs uppercase tracking-wider text-cyan-400 font-semibold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> Our Anthem
+          </span>
+          <button onclick="openMusicEditModal()" class="text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 transition">
+            <i class="fa-solid fa-sliders"></i> Edit Track
+          </button>
+        </div>
+
+        <div class="flex items-center gap-4 my-3">
+          <div class="relative w-16 h-16 flex-shrink-0">
+            <div id="vinylDisk" class="w-16 h-16 rounded-full bg-gradient-to-tr from-slate-900 to-slate-800 p-1 border-2 border-pink-500/40 vinyl-spin paused flex items-center justify-center shadow-lg">
+              <div class="w-6 h-6 rounded-full bg-pink-500/80 flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-black"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-hidden flex-1">
+            <h4 id="songTitle" class="font-bold text-white text-sm truncate">Kita Lewati Berdua</h4>
+            <p id="songArtist" class="text-xs text-gray-400 truncate">Overnight</p>
+            
+            <div class="flex items-end gap-1 h-5 mt-2">
+              <span class="w-1 bg-pink-400 rounded-full equalizer-bar paused" style="animation-delay: 0.1s"></span>
+              <span class="w-1 bg-purple-400 rounded-full equalizer-bar paused" style="animation-delay: 0.3s"></span>
+              <span class="w-1 bg-cyan-400 rounded-full equalizer-bar paused" style="animation-delay: 0.2s"></span>
+              <span class="w-1 bg-pink-500 rounded-full equalizer-bar paused" style="animation-delay: 0.4s"></span>
+              <span class="w-1 bg-indigo-400 rounded-full equalizer-bar paused" style="animation-delay: 0.15s"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2 mt-2">
+          <div class="space-y-1">
+            <input type="range" id="audioSeek" value="0" max="100" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-500" oninput="seekAudio(this.value)">
+            <div class="flex justify-between text-[10px] text-gray-400">
+              <span id="currentTime">0:00</span>
+              <span id="totalDuration">0:00</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <div class="flex items-center gap-2">
+              <button onclick="toggleMute()" id="muteBtn" class="text-gray-400 hover:text-white text-xs p-1">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+              <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7" class="w-16 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400" oninput="setVolume(this.value)">
+            </div>
+
+            <button onclick="togglePlayMusic()" id="playBtn" class="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 transition flex items-center justify-center text-white shadow-lg shadow-pink-500/30">
+              <i class="fa-solid fa-play text-xs ml-0.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: LOVE SPAM BOMB (3 cols) -->
+      <div class="md:col-span-3 glass-card rounded-3xl p-6 flex flex-col justify-between items-center text-center relative overflow-hidden group">
+        <div>
+          <span class="text-[10px] uppercase font-bold tracking-widest text-pink-400 px-2 py-0.5 rounded-full bg-pink-500/10 border border-pink-500/20">
+            Instant Love Spam 💥
+          </span>
+          <h4 class="font-bold text-white mt-2 text-sm">Kirim Love Blast</h4>
+          <p class="text-xs text-gray-400 mt-1">Tekan tombol ini untuk menghujani layar pasanganmu!</p>
+        </div>
+
+        <button onclick="triggerLoveSpam()" class="my-4 relative group-hover:scale-110 transition duration-300">
+          <div class="absolute -inset-2 bg-gradient-to-r from-pink-600 to-purple-600 rounded-full blur-md opacity-75 group-hover:opacity-100 transition"></div>
+          <div class="relative w-20 h-20 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center shadow-2xl border-2 border-white/20">
+            <i class="fa-solid fa-heart text-3xl text-white animate-bounce"></i>
+          </div>
+        </button>
+
+        <span class="text-xs text-gray-400">Sent Today: <strong id="spamCount" class="text-pink-400 font-cyber">0</strong> ❤️</span>
+      </div>
+
+      <!-- CARD 4: VIBE CHECK / MOOD (5 cols) -->
+      <div class="md:col-span-5 glass-card rounded-3xl p-6 space-y-4">
+        <div class="flex justify-between items-center">
+          <h4 class="font-bold text-white text-sm">Mood Hari Ini <span class="text-xs font-normal text-gray-400">Vibe Check</span></h4>
+          <span class="text-xs text-pink-400">Sync Live ⚡</span>
+        </div>
+        <p class="text-xs text-gray-400">Pilih perasaanmu sekarang agar pasanganmu tahu:</p>
+        
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setMood('Missing u 🥺')" class="p-2.5 rounded-xl bg-white/5 hover:bg-pink-500/20 border border-white/5 hover:border-pink-500/30 text-xs font-medium text-left flex items-center gap-2 transition">
+            <span>🥺</span> Missing u
+          </button>
+          <button onclick="setMood('Obsessed 💖')" class="p-2.5 rounded-xl bg-white/5 hover:bg-pink-500/20 border border-white/5 hover:border-pink-500/30 text-xs font-medium text-left flex items-center gap-2 transition">
+            <span>💖</span> Obsessed
+          </button>
+          <button onclick="setMood('Need Boba 🧋')" class="p-2.5 rounded-xl bg-white/5 hover:bg-pink-500/20 border border-white/5 hover:border-pink-500/30 text-xs font-medium text-left flex items-center gap-2 transition">
+            <span>🧋</span> Need Boba
+          </button>
+          <button onclick="setMood('Sleepy 😴')" class="p-2.5 rounded-xl bg-white/5 hover:bg-pink-500/20 border border-white/5 hover:border-pink-500/30 text-xs font-medium text-left flex items-center gap-2 transition">
+            <span>😴</span> Sleepy
+          </button>
+        </div>
+
+        <div class="pt-2 border-t border-white/5 flex justify-between items-center">
+          <span class="text-xs text-gray-400">Mood Pasangan:</span>
+          <span id="partnerMoodDisplay" class="text-xs font-semibold px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">Belum diisi ✨</span>
+        </div>
+      </div>
+
+      <!-- CARD 5: SECRET CYBER NOTES (7 cols) -->
+      <div class="md:col-span-7 glass-card rounded-3xl p-6 flex flex-col justify-between space-y-4">
+        <div class="flex justify-between items-center">
+          <h4 class="font-bold text-white text-sm flex items-center gap-2">
+            <i class="fa-solid fa-paper-plane text-pink-400"></i> Secret Cyber Notes
+          </h4>
+          <span class="text-xs text-gray-400">Realtime Wall</span>
+        </div>
+
+        <div id="notesList" class="space-y-2 max-h-48 overflow-y-auto pr-2 text-xs">
+          <div class="text-center text-gray-500 py-4">Belum ada pesan rahasia...</div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <input type="text" id="noteInput" placeholder="Ketik pesan manis kilat / spill keluh kesah..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500">
+          <button onclick="sendNote()" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl text-xs font-bold hover:opacity-90 transition">
+            Send
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL EDIT MUSIC TRACK -->
+  <div id="musicModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 space-y-4 border border-white/10">
+      <h3 class="font-bold text-white text-lg">Edit Track Musik 🎵</h3>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-gray-400 mb-1">Judul Lagu</label>
+          <input type="text" id="inputSongTitle" class="w-full bg-black/50 border border-white/10 rounded-xl p-2.5 text-white">
+        </div>
+        <div>
+          <label class="block text-gray-400 mb-1">Penyanyi / Artist</label>
+          <input type="text" id="inputSongArtist" class="w-full bg-black/50 border border-white/10 rounded-xl p-2.5 text-white">
+        </div>
+        <div>
+          <label class="block text-gray-400 mb-1">URL Audio MP3 (Direct Link)</label>
+          <input type="text" id="inputSongUrl" class="w-full bg-black/50 border border-white/10 rounded-xl p-2.5 text-white" placeholder="https://domain.com/music.mp3">
+          <p class="text-[10px] text-gray-500 mt-1">*Catatan: Gunakan direct link berformat .mp3 agar dapat diputar langsung oleh browser.</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeMusicEditModal()" class="px-4 py-2 rounded-xl bg-white/5 text-gray-300 text-xs font-medium">Batal</button>
+        <button onclick="saveMusicTrack()" class="px-4 py-2 rounded-xl bg-pink-500 text-white text-xs font-bold">Simpan Lagu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    let audio = document.getElementById('bgAudio');
+    let isPlaying = false;
+    let spamCount = 0;
+    let bc = new BroadcastChannel('lovespace_channel');
+
+    let coupleData = JSON.parse(localStorage.getItem('lovespace_couple')) || {
+      names: "anin & azzuri",
+      since: "2026-09-07T00:00:00",
+      songTitle: "Kita Lewati Berdua",
+      songArtist: "Overnight",
+      songUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+    };
+
+    let notes = JSON.parse(localStorage.getItem('lovespace_notes')) || [];
+
+    document.getElementById('coupleNames').innerText = coupleData.names;
+    document.getElementById('songTitle').innerText = coupleData.songTitle;
+    document.getElementById('songArtist').innerText = coupleData.songArtist;
+    audio.src = coupleData.songUrl;
+
+    function updateTimer() {
+      const start = new Date(coupleData.since).getTime();
+      const now = new Date().getTime();
+      const diff = Math.max(0, now - start);
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('days').innerText = d;
+      document.getElementById('hours').innerText = h;
+      document.getElementById('mins').innerText = m;
+      document.getElementById('secs').innerText = s;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    function togglePlayMusic() {
+      if (isPlaying) {
+        audio.pause();
+        document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-play text-xs ml-0.5"></i>';
+        document.getElementById('vinylDisk').classList.add('paused');
+        document.querySelectorAll('.equalizer-bar').forEach(el => el.classList.add('paused'));
+        isPlaying = false;
+      } else {
+        audio.play().then(() => {
+          document.getElementById('playBtn').innerHTML = '<i class="fa-solid fa-pause text-xs"></i>';
+          document.getElementById('vinylDisk').classList.remove('paused');
+          document.querySelectorAll('.equalizer-bar').forEach(el => el.classList.remove('paused'));
+          isPlaying = true;
+        }).catch(error => {
+          console.error("Audio playback error:", error);
+          alert("Gagal memutar audio. Pastikan link audio berformat .mp3 langsung dan dapat diakses.");
+        });
+      }
+    }
+
+    audio.ontimeupdate = () => {
+      if (audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('audioSeek').value = progress;
+        document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
+        document.getElementById('totalDuration').innerText = formatTime(audio.duration);
+      }
+    };
+
+    function seekAudio(val) {
+      if (audio.duration) {
+        audio.currentTime = (val / 100) * audio.duration;
+      }
+    }
+
+    function setVolume(val) {
+      audio.volume = val;
+    }
+
+    function toggleMute() {
+      audio.muted = !audio.muted;
+      document.getElementById('muteBtn').innerHTML = audio.muted ? 
+        '<i class="fa-solid fa-volume-xmark text-pink-400"></i>' : 
+        '<i class="fa-solid fa-volume-high"></i>';
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function openMusicEditModal() {
+      document.getElementById('inputSongTitle').value = coupleData.songTitle;
+      document.getElementById('inputSongArtist').value = coupleData.songArtist;
+      document.getElementById('inputSongUrl').value = coupleData.songUrl;
+      document.getElementById('musicModal').classList.remove('hidden');
+    }
+
+    function closeMusicEditModal() {
+      document.getElementById('musicModal').classList.add('hidden');
+    }
+
+    function saveMusicTrack() {
+      coupleData.songTitle = document.getElementById('inputSongTitle').value || "Our Special Anthem";
+      coupleData.songArtist = document.getElementById('inputSongArtist').value || "Artist";
+      coupleData.songUrl = document.getElementById('inputSongUrl').value || coupleData.songUrl;
+
+      document.getElementById('songTitle').innerText = coupleData.songTitle;
+      document.getElementById('songArtist').innerText = coupleData.songArtist;
+      audio.src = coupleData.songUrl;
+      audio.load();
+
+      localStorage.setItem('lovespace_couple', JSON.stringify(coupleData));
+      closeMusicEditModal();
+
+      if (isPlaying) {
+        audio.play().catch(e => console.log(e));
+      }
+    }
+
+    function triggerLoveSpam() {
+      spamCount++;
+      document.getElementById('spamCount').innerText = spamCount;
+
+      confetti({
+        particleCount: 25,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#f472b6', '#a855f7', '#ec4899']
+      });
+
+      bc.postMessage({ type: 'SPAM_LOVE' });
+    }
+
+    bc.onmessage = (e) => {
+      if (e.data.type === 'SPAM_LOVE') {
+        confetti({ particleCount: 30, spread: 80, origin: { y: 0.5 } });
+      } else if (e.data.type === 'SET_MOOD') {
+        document.getElementById('partnerMoodDisplay').innerText = e.data.mood;
+      }
+    };
+
+    function setMood(moodText) {
+      document.getElementById('partnerMoodDisplay').innerText = moodText;
+      bc.postMessage({ type: 'SET_MOOD', mood: moodText });
+    }
+
+    function renderNotes() {
+      const container = document.getElementById('notesList');
+      if (notes.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-4">Belum ada pesan rahasia...</div>';
+        return;
+      }
+      container.innerHTML = notes.map(n => `
+        <div class="bg-black/30 p-2.5 rounded-xl border border-white/5 flex justify-between items-center">
+          <span class="text-gray-200">${n.text}</span>
+          <span class="text-[10px] text-gray-500">${n.time}</span>
+        </div>
+      `).join('');
+    }
+
+    function sendNote() {
+      const input = document.getElementById('noteInput');
+      if (!input.value.trim()) return;
+
+      const newNote = {
+        text: input.value.trim(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      notes.unshift(newNote);
+      localStorage.setItem('lovespace_notes', JSON.stringify(notes));
+      renderNotes();
+      input.value = '';
+    }
+
+    renderNotes();
+
+    function copyShareLink() {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link LoveSpace telah disalin! Bagikan ke pasanganmu 💖");
+    }
+
+    function editNames() {
+      const name = prompt("Masukkan nama kalian (misal: Budi & Siti):", coupleData.names);
+      if (name) {
+        coupleData.names = name;
+        document.getElementById('coupleNames').innerText = name;
+        localStorage.setItem('lovespace_couple', JSON.stringify(coupleData));
+      }
+    }
+  </script>
+</body>
+</html>
